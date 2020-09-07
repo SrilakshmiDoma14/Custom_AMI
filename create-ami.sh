@@ -8,3 +8,9 @@ echo $AMI_ID
 
 terraform init
 terraform apply
+
+aws ssm put-parameter \
+    --name "AMI_ID" \
+    --value $AMI_ID \
+    --type String \
+    --data-type "aws:ec2:image"
