@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_instance" "inspector-instance" {
-  ami = "ami-0bbe28eb2173f6167"
+  ami = var.AMI_ID
   instance_type = "t2.micro"
   iam_instance_profile = "inspector-run"
   security_groups = ["${aws_security_group.sample_sg.name}"]
@@ -11,6 +11,16 @@ resource "aws_instance" "inspector-instance" {
 
   tags = {
     Name = "InspectInstances"
+  }
+  depends_on = [aws_inspector_resource_group.bar]
+
+}
+
+data "template_file" "init" {
+  template = "${file("startup.sh")}"
+
+  vars = {
+    some_address = "${aws_inspector_assessment_template.bar-template.arn}"
   }
 }
 
@@ -34,7 +44,7 @@ resource "aws_security_group" "sample_sg" {
 
 resource "aws_inspector_resource_group" "bar" {
   tags = {
-    Name = "${aws_instance.inspector-instance.tags.Name}"
+    Name = "InspectInstances"
   }
 }
 
@@ -46,7 +56,7 @@ resource "aws_inspector_assessment_target" "myinspect" {
 resource "aws_inspector_assessment_template" "bar-template" {
   name       = "bar-template"
   target_arn = "${aws_inspector_assessment_target.myinspect.arn}"
-  duration   = 900
+  duration   = 3600
   rules_package_arns = [
     "arn:aws:inspector:us-east-2:646659390643:rulespackage/0-JnA8Zp85",
     "arn:aws:inspector:us-east-2:646659390643:rulespackage/0-m8r61nnh",
@@ -55,6 +65,18 @@ resource "aws_inspector_assessment_template" "bar-template" {
   ]
 }
 
-output "arn" {
-  value = "${aws_inspector_assessment_template.bar-template.arn}"
+resource "null_resource" "example1" {
+  provisioner "remote-exec" {
+    connection {
+      type = "ssh"
+      user = "ansible"
+      password = "ansible123"
+      host = "${aws_instance.inspector-instance.public_ip}"
+    }
+    inline = [
+      "sleep 120",
+      "aws inspector start-assessment-run --assessment-template-arn ${aws_inspector_assessment_template.bar-template.arn} --region us-east-2"
+    ]
+  }
+  depends_on = [aws_instance.inspector-instance]
 }
