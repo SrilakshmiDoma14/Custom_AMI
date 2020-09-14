@@ -1,0 +1,39 @@
+{
+  "Version": "2008-10-17",
+  "Id": "__default_policy_ID",
+  "Statement": [
+    {
+      "Sid": "__default_statement_ID",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": [
+        "SNS:GetTopicAttributes",
+        "SNS:SetTopicAttributes",
+        "SNS:AddPermission",
+        "SNS:RemovePermission",
+        "SNS:DeleteTopic",
+        "SNS:Subscribe",
+        "SNS:ListSubscriptionsByTopic",
+        "SNS:Publish",
+        "SNS:Receive"
+      ],
+      "Resource": "arn:aws:sns:us-east-2:142396412042:lambda",
+      "Condition": {
+        "StringEquals": {
+          "AWS:SourceOwner": "142396412042"
+        }
+      }
+    },
+    {
+      "Sid": "inspector-sns-publish-statement",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "inspector.amazonaws.com"
+      },
+      "Action": "SNS:Publish",
+      "Resource": "arn:aws:sns:*"
+    }
+  ]
+}
