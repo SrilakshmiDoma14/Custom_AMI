@@ -16,14 +16,6 @@ resource "aws_instance" "inspector-instance" {
 
 }
 
-data "template_file" "init" {
-  template = "${file("startup.sh")}"
-
-  vars = {
-    some_address = "${aws_inspector_assessment_template.bar-template.arn}"
-  }
-}
-
 resource "aws_security_group" "sample_sg" {
   name = "Allow SSH"
   ingress {
